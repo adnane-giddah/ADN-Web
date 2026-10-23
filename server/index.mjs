@@ -22,6 +22,7 @@ const DIST_ADMIN = path.join(ROOT, '..', 'dist-admin');
 
 const PORT = Number(process.env.PORT || 3001);
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || '';
+const TRUST_PROXY = process.env.TRUST_PROXY === 'true';
 const ADMIN_PATH = process.env.ADMIN_PATH
   ? '/' + process.env.ADMIN_PATH.replace(/^\/+|\/+$/g, '')
   : '';
@@ -38,6 +39,14 @@ if (!ADMIN_TOKEN) {
 
 const fails = new Map(); // ip -> timestamps of wrong passwords
 const hits = new Map(); // ip -> timestamps of recent submissions
+
+function clientIp(req) {
+  if (TRUST_PROXY) {
+    const forwardedIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim();
+    if (forwardedIp) return forwardedIp;
+  }
+  return req.socket.remoteAddress || 'unknown';
+}
 
 function limited(ip) {
   const now = Date.now();
@@ -68,7 +77,7 @@ function locked(ip) {
 
 // Returns true if the request is the manager. Records failures per IP.
 function isAdmin(req) {
-  const ip = req.socket.remoteAddress || 'unknown';
+  const ip = clientIp(req);
   if (locked(ip)) return false;
   const ok = checkToken(req);
   if (!ok) fails.get(ip).push(Date.now());
@@ -130,7 +139,7 @@ const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, 'http://x');
 
     if (url.pathname === '/api/reviews' && req.method === 'POST') {
-      const ip = req.socket.remoteAddress || 'unknown';
+      const ip = clientIp(req);
       if (limited(ip)) {
         return send(res, 429, { error: 'Too many reviews. Please try again later.' });
       }
@@ -182,7 +191,7 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   const managerStatus = ADMIN_PATH ? ` (manager: ${ADMIN_PATH}/)` : '';
   console.log(`ADN server on http://localhost:${PORT}${managerStatus}`);
 });
