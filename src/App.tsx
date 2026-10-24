@@ -38,6 +38,13 @@ const projects = [
       'A shared workspace for an olympiad committee to create, discuss and rate competition problems together.',
     url: 'https://github-seven-murex.vercel.app/',
   },
+  {
+    name: "Asma'ul Husna",
+    category: 'Cultural education',
+    description:
+      'A fresh, interactive way to learn and memorize the 99 Names of God, rooted in Islamic tradition.',
+    url: 'https://asma-ul-husna-1l1.pages.dev/',
+  },
 ];
 
 export default function App() {
