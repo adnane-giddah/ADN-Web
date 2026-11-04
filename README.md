@@ -1,6 +1,6 @@
 # ADN
 
-The ADN website: projects, the Asma'ul Husna widget, community links, contact details and moderated reviews.
+The ADN website: projects, a small timing game, community links, contact details and moderated reviews.
 
 ## Run it locally
 
@@ -35,4 +35,3 @@ New reviews stay hidden until you approve them. Open `https://your-site/<ADMIN_P
 
 - Projects, contacts and stats: `src/data/site.ts`
 - Project screenshots: `public/projects/`
-- The 99 Names: `src/data/names.ts`, copied from the Asma'ul Husna project

@@ -1,10 +1,10 @@
 import About from './components/About';
-import AsmaWidget from './components/AsmaWidget';
 import Contact from './components/Contact';
 import DiscordCard from './components/DiscordCard';
 import Footer from './components/Footer';
 import Hero from './components/Hero';
 import Nav from './components/Nav';
+import OneSecond from './components/OneSecond';
 import Projects from './components/Projects';
 import Reviews from './components/Reviews';
 
@@ -19,7 +19,7 @@ export default function App() {
         <div id="top" className="bento">
           <Hero />
           <DiscordCard />
-          <AsmaWidget />
+          <OneSecond />
         </div>
         <Projects />
         <div className="bento bento--people">

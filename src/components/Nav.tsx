@@ -3,7 +3,7 @@ import { DISCORD_INVITE } from '../data/site';
 import { CloseIcon, DiscordIcon, MenuIcon } from './Icons';
 
 const LINKS = [
-  { id: 'asma', label: "Asma'ul Husna" },
+  { id: 'play', label: 'Play' },
   { id: 'projects', label: 'Projects' },
   { id: 'contact', label: 'Contact' },
   { id: 'reviews', label: 'Reviews' },

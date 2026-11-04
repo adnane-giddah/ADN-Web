@@ -1,6 +1,6 @@
 export const DISCORD_INVITE = 'https://discord.gg/Zew6qUMs9F';
 export const DISCORD_CODE = 'Zew6qUMs9F';
-export const ASMA_URL = 'https://asma-ul-husna-1l1.pages.dev/';
+export const ADNTISM_URL = 'https://adnane-giddah.github.io/ADNTism/';
 export const PORTFOLIO_URL = 'https://adnane-giddah.github.io/Portfolio/';
 export const GITHUB_URL = 'https://github.com/adnane-giddah';
 export const LINKEDIN_URL = 'https://linkedin.com/in/ahmed-adnane-meddah-8454b434b';
@@ -22,7 +22,7 @@ export const PROJECTS: Project[] = [
     category: 'Cultural education',
     description:
       'A fresh, interactive way to learn and memorize the 99 Names of God, rooted in Islamic tradition.',
-    url: ASMA_URL,
+    url: 'https://asma-ul-husna-1l1.pages.dev/',
     image: 'projects/asma.webp',
   },
   {
@@ -38,7 +38,7 @@ export const PROJECTS: Project[] = [
     category: 'A precision challenge',
     description:
       'A playful interactive take on epsilon: get closer, sharpen your estimate and see just how close you can get.',
-    url: 'https://adnane-giddah.github.io/ADNTism/',
+    url: ADNTISM_URL,
     image: 'projects/adntism.webp',
   },
   {

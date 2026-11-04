@@ -2,11 +2,11 @@
 // favicon.svg. The logo is exactly one crossing whose ends line up every TILE_H
 // units, so stacking it builds a continuous chain, and moving the chain up by
 // one tile loops without a visible seam.
-const TILE_W = 175; // logo width  (362 -> 535)
-const TILE_H = 244.089; // logo height between matching ends (374.659 -> 618.748)
+export const TILE_W = 175; // logo width  (362 -> 535)
+export const TILE_H = 244.089; // logo height between matching ends (374.659 -> 618.748)
 const TILES = 6;
 
-function Tile({ y }: { y: number }) {
+export function Tile({ y }: { y: number }) {
   return (
     <g transform={`translate(-362 ${y - 374.659})`}>
       <g className="helix__strand">
