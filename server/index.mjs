@@ -1,197 +1,110 @@
-// Tiny dependency-free review API.
-//   POST /api/reviews                 public, rate limited
-//   <ADMIN_PATH>/                     private manager page (separate bundle)
-//   GET  <ADMIN_PATH>/api/reviews     manager only (x-admin-token header)
-//   DELETE <ADMIN_PATH>/api/reviews/:id
-// The secret path exists only here on the server, never in the public bundle.
-// Serves ./dist (public site) and ./dist-admin (only under ADMIN_PATH).
+// Node server for running ADN yourself: the API, the public site from ./dist,
+// and the private manager page from ./dist-admin, only under ADMIN_PATH. The
+// secret path exists only here on the server, never in the public bundle.
+// On Vercel, api/index.mjs and scripts/publish-manager.mjs do this job instead.
 import http from 'node:http';
-import { promises as fs, existsSync } from 'node:fs';
-import { randomUUID, timingSafeEqual } from 'node:crypto';
+import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createApi } from './api.mjs';
 import { loadEnv } from './loadEnv.mjs';
 
 loadEnv();
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = path.join(ROOT, 'data');
-const DATA_FILE = path.join(DATA_DIR, 'reviews.json');
 const DIST = path.join(ROOT, '..', 'dist');
 const DIST_ADMIN = path.join(ROOT, '..', 'dist-admin');
 
 const PORT = Number(process.env.PORT || 3001);
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || '';
-const TRUST_PROXY = process.env.TRUST_PROXY === 'true';
 const ADMIN_PATH = process.env.ADMIN_PATH
   ? '/' + process.env.ADMIN_PATH.replace(/^\/+|\/+$/g, '')
   : '';
-const MAX_FAILS = 5; // wrong passwords allowed per IP...
-const FAIL_WINDOW_MS = 15 * 60 * 1000; // ...per 15 minutes
-const MAX_PER_WINDOW = 3; // reviews allowed per IP...
-const WINDOW_MS = 60 * 60 * 1000; // ...per hour
-const MAX_NAME = 60;
-const MAX_TEXT = 1000;
 
-if (!ADMIN_TOKEN) {
+if (!process.env.ADMIN_TOKEN) {
   console.warn('ADMIN_TOKEN is not set: the manager view is disabled.');
 }
 
-const fails = new Map(); // ip -> timestamps of wrong passwords
-const hits = new Map(); // ip -> timestamps of recent submissions
-
-function clientIp(req) {
-  if (TRUST_PROXY) {
-    const forwardedIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim();
-    if (forwardedIp) return forwardedIp;
-  }
-  return req.socket.remoteAddress || 'unknown';
-}
-
-function limited(ip) {
-  const now = Date.now();
-  const recent = (hits.get(ip) || []).filter((t) => now - t < WINDOW_MS);
-  hits.set(ip, recent);
-  return recent.length >= MAX_PER_WINDOW;
-}
-
-async function load() {
-  try {
-    return JSON.parse(await fs.readFile(DATA_FILE, 'utf8'));
-  } catch {
-    return [];
-  }
-}
-
-async function save(list) {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.writeFile(DATA_FILE, JSON.stringify(list, null, 2));
-}
-
-function locked(ip) {
-  const now = Date.now();
-  const recent = (fails.get(ip) || []).filter((t) => now - t < FAIL_WINDOW_MS);
-  fails.set(ip, recent);
-  return recent.length >= MAX_FAILS;
-}
-
-// Returns true if the request is the manager. Records failures per IP.
-function isAdmin(req) {
-  const ip = clientIp(req);
-  if (locked(ip)) return false;
-  const ok = checkToken(req);
-  if (!ok) fails.get(ip).push(Date.now());
-  return ok;
-}
-
-function checkToken(req) {
-  const given = Buffer.from(String(req.headers['x-admin-token'] || ''));
-  const real = Buffer.from(ADMIN_TOKEN);
-  return ADMIN_TOKEN && given.length === real.length && timingSafeEqual(given, real);
-}
-
-function send(res, status, body) {
-  res.writeHead(status, { 'content-type': 'application/json' });
-  res.end(JSON.stringify(body));
-}
-
-function readBody(req) {
-  return new Promise((resolve, reject) => {
-    let raw = '';
-    req.on('data', (c) => {
-      raw += c;
-      if (raw.length > 10_000) {
-        reject(new Error('too large'));
-        req.destroy();
-      }
-    });
-    req.on('end', () => {
-      try {
-        resolve(JSON.parse(raw || '{}'));
-      } catch {
-        reject(new Error('bad json'));
-      }
-    });
-  });
-}
-
 const MIME = {
-  '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
-  '.svg': 'image/svg+xml', '.json': 'application/json', '.png': 'image/png',
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.json': 'application/json',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.txt': 'text/plain; charset=utf-8',
 };
 
-async function serveStatic(res, dir, rel, headers = {}) {
-  let file = path.join(dir, path.normalize(rel));
-  if (!file.startsWith(dir)) return send(res, 403, { error: 'forbidden' });
-  if (!existsSync(file) || (await fs.stat(file)).isDirectory()) {
-    file = path.join(dir, 'index.html');
+const SECURITY_HEADERS = {
+  'x-content-type-options': 'nosniff',
+  'x-frame-options': 'DENY',
+  'referrer-policy': 'strict-origin-when-cross-origin',
+};
+
+async function readFileIfPresent(file) {
+  try {
+    return await fs.readFile(file);
+  } catch (error) {
+    if (['ENOENT', 'EISDIR', 'ENOTDIR'].includes(error.code)) return null;
+    throw error;
   }
-  if (!existsSync(file)) return send(res, 404, { error: 'not found' });
+}
+
+function sendPlain(res, status, text) {
+  res.writeHead(status, { 'content-type': 'text/plain; charset=utf-8', ...SECURITY_HEADERS });
+  res.end(text);
+}
+
+async function serveStatic(res, dir, rel, headers = {}) {
+  const file = path.join(dir, rel);
+  if (file !== dir && !file.startsWith(dir + path.sep)) return sendPlain(res, 403, 'Forbidden');
+
+  let found = file;
+  let body = await readFileIfPresent(file);
+  // A missing page falls back to the app. A missing file stays a real 404.
+  if (!body && !path.extname(rel)) {
+    found = path.join(dir, 'index.html');
+    body = await readFileIfPresent(found);
+  }
+  if (!body) return sendPlain(res, 404, 'Not found');
+
+  const fingerprinted = rel.startsWith('/assets/');
   res.writeHead(200, {
-    'content-type': MIME[path.extname(file)] || 'application/octet-stream',
+    'content-type': MIME[path.extname(found)] || 'application/octet-stream',
+    'cache-control': fingerprinted ? 'public, max-age=31536000, immutable' : 'no-cache',
+    ...SECURITY_HEADERS,
     ...headers,
   });
-  res.end(await fs.readFile(file));
+  res.end(body);
 }
+
+const handleApi = createApi();
 
 const server = http.createServer(async (req, res) => {
   try {
-    const url = new URL(req.url, 'http://x');
+    if (await handleApi(req, res)) return;
 
-    if (url.pathname === '/api/reviews' && req.method === 'POST') {
-      const ip = clientIp(req);
-      if (limited(ip)) {
-        return send(res, 429, { error: 'Too many reviews. Please try again later.' });
-      }
-      const body = await readBody(req);
-      if (body.website) return send(res, 201, { ok: true }); // honeypot: pretend success
-      const name = String(body.name || '').trim().slice(0, MAX_NAME) || 'Anonymous';
-      const text = String(body.text || '').trim();
-      const rating = Math.round(Number(body.rating));
-      if (text.length < 3 || text.length > MAX_TEXT) {
-        return send(res, 400, { error: `Review must be 3-${MAX_TEXT} characters.` });
-      }
-      if (!(rating >= 1 && rating <= 5)) {
-        return send(res, 400, { error: 'Rating must be 1-5.' });
-      }
-      hits.get(ip).push(Date.now());
-      const list = await load();
-      list.unshift({ id: randomUUID(), name, rating, text, createdAt: new Date().toISOString() });
-      await save(list);
-      return send(res, 201, { ok: true });
-    }
+    const { pathname } = new URL(req.url, 'http://x');
+    const rel = decodeURIComponent(pathname);
 
-    // ---- private manager area ----
-    if (ADMIN_PATH && url.pathname === ADMIN_PATH) {
+    if (ADMIN_PATH && rel === ADMIN_PATH) {
       res.writeHead(302, { location: ADMIN_PATH + '/' });
       return res.end();
     }
-    if (ADMIN_PATH && url.pathname.startsWith(ADMIN_PATH + '/')) {
-      const rel = url.pathname.slice(ADMIN_PATH.length);
+    if (ADMIN_PATH && rel.startsWith(ADMIN_PATH + '/')) {
       const priv = { 'cache-control': 'no-store', 'x-robots-tag': 'noindex, nofollow' };
-
-      if (rel === '/api/reviews' && req.method === 'GET') {
-        if (!isAdmin(req)) return send(res, 401, { error: 'Unauthorized' });
-        return send(res, 200, await load());
-      }
-      const del = rel.match(/^\/api\/reviews\/([\w-]+)$/);
-      if (del && req.method === 'DELETE') {
-        if (!isAdmin(req)) return send(res, 401, { error: 'Unauthorized' });
-        await save((await load()).filter((r) => r.id !== del[1]));
-        return send(res, 200, { ok: true });
-      }
-      if (rel.startsWith('/api/')) return send(res, 404, { error: 'not found' });
-      return serveStatic(res, DIST_ADMIN, rel, priv);
+      return await serveStatic(res, DIST_ADMIN, rel.slice(ADMIN_PATH.length), priv);
     }
-
-    if (url.pathname.startsWith('/api/')) return send(res, 404, { error: 'not found' });
-    return serveStatic(res, DIST, url.pathname);
-  } catch (e) {
-    return send(res, 400, { error: e.message || 'bad request' });
+    return await serveStatic(res, DIST, rel);
+  } catch (error) {
+    if (error instanceof URIError) return sendPlain(res, 400, 'Bad request');
+    console.error('Server error:', error);
+    if (!res.headersSent) sendPlain(res, 500, 'Server error');
+    else res.end();
   }
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  const managerStatus = ADMIN_PATH ? ` (manager: ${ADMIN_PATH}/)` : '';
+  const managerStatus = ADMIN_PATH ? ' (manager page enabled)' : '';
   console.log(`ADN server on http://localhost:${PORT}${managerStatus}`);
 });
