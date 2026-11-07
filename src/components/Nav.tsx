@@ -5,6 +5,7 @@ import { CloseIcon, DiscordIcon, MenuIcon } from './Icons';
 const LINKS = [
   { id: 'play', label: 'Play' },
   { id: 'projects', label: 'Projects' },
+  { id: 'portfolio', label: 'Portfolio' },
   { id: 'contact', label: 'Contact' },
   { id: 'reviews', label: 'Reviews' },
 ];

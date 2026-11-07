@@ -544,6 +544,11 @@ button { font: inherit; color: inherit; }
 .project__name svg { flex: none; width: 20px; height: 20px; color: var(--yellow); }
 .project__text { color: var(--text-soft); font-size: 15px; line-height: 1.55; }
 
+.portfolio { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+.portfolio .project__shot { border-bottom: 0; border-right: 1px solid var(--line); }
+.portfolio__body { justify-content: center; gap: 10px; padding: 32px; }
+.portfolio .project__text { font-size: 16px; }
+
 /* Tiles rise in as they scroll into view. Uses `translate`, not `transform`, so
    the hover lift still works. Browsers without scroll timelines just show them. */
 @supports (animation-timeline: view()) {
@@ -841,6 +846,8 @@ button { font: inherit; color: inherit; }
   .discord__icon { margin-bottom: 0; }
   .discord__title { font-size: 40px; }
   .projects { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .portfolio { grid-template-columns: minmax(0, 1fr); }
+  .portfolio .project__shot { border-right: 0; border-bottom: 1px solid var(--line); }
   .game { grid-template-columns: minmax(0, 1fr); }
   .game__play { border-top: 1px solid var(--line); border-left: 0; }
   .reviews { grid-template-columns: minmax(0, 1fr); }
@@ -902,6 +909,7 @@ button { font: inherit; color: inherit; }
   .discord, .about, .contact, .game__intro, .game__play, .reviews__form { padding: 22px; }
   .reviews__wall { padding: 4px 22px; }
   .projects { grid-template-columns: minmax(0, 1fr); }
+  .portfolio__body { padding: 20px; }
   .project__mark { display: none; }
   .about__stats dd { font-size: 40px; }
 }

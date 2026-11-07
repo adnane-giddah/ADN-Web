@@ -5,6 +5,7 @@ import Footer from './components/Footer';
 import Hero from './components/Hero';
 import Nav from './components/Nav';
 import OneSecond from './components/OneSecond';
+import Portfolio from './components/Portfolio';
 import Projects from './components/Projects';
 import Reviews from './components/Reviews';
 
@@ -22,6 +23,7 @@ export default function App() {
           <OneSecond />
         </div>
         <Projects />
+        <Portfolio />
         <div className="bento bento--people">
           <About />
           <Contact />

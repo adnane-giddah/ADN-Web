@@ -57,14 +57,6 @@ export const PROJECTS: Project[] = [
     url: 'https://github-seven-murex.vercel.app/',
     image: 'projects/olympiad.webp',
   },
-  {
-    name: 'Portfolio',
-    category: 'AI & mathematics',
-    description:
-      'A personal portfolio highlighting Ahmed Adnane Meddah’s work and interests across artificial intelligence and mathematics.',
-    url: PORTFOLIO_URL,
-    image: 'projects/portfolio.webp',
-  },
 ];
 
 export const STATS = [
