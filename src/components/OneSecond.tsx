@@ -102,7 +102,6 @@ export default function OneSecond() {
   return (
     <section id="play" className="tile game" aria-labelledby="game-title">
       <div className="game__intro">
-        <p className="eyebrow">The ADN challenge</p>
         <h2 id="game-title" className="game__title">
           Stop at exactly one second.
         </h2>

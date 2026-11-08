@@ -58,10 +58,3 @@ export const PROJECTS: Project[] = [
     image: 'projects/olympiad.webp',
   },
 ];
-
-export const STATS = [
-  { value: '500+', label: 'Students coached' },
-  { value: '5+', label: 'International medals' },
-  { value: '5+', label: 'African countries reached' },
-  { value: '1k+', label: 'Community members' },
-];

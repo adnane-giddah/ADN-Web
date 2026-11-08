@@ -39,9 +39,7 @@ export default function DiscordCard() {
     >
       <DiscordIcon className="discord__icon" />
       <div>
-        <p className="discord__eyebrow">Community</p>
-        <h2 className="discord__title">Join ADN on Discord</h2>
-        <p className="discord__text">Come in, meet the community and see what’s being built.</p>
+        <h2 className="discord__title">ADN on Discord</h2>
       </div>
       <div className="discord__foot">
         <span className="discord__count">

@@ -12,7 +12,7 @@ export default function Portfolio() {
           <img src="projects/portfolio.webp" alt="" width="800" height="500" loading="lazy" />
         </span>
         <span className="project__body portfolio__body">
-          <span className="eyebrow">AI &amp; mathematics</span>
+          <span className="project__tag">AI &amp; mathematics</span>
           <span className="project__name">
             Ahmed Adnane Meddah <ArrowUpRight />
           </span>

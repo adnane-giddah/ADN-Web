@@ -23,7 +23,7 @@ export default function Projects() {
               <img src={project.image} alt="" width="800" height="500" loading="lazy" />
             </span>
             <span className="project__body">
-              <span className="eyebrow">{project.category}</span>
+              <span className="project__tag">{project.category}</span>
               <span className="project__name">
                 {project.name} <ArrowUpRight />
               </span>

@@ -56,9 +56,7 @@ export default function Reviews() {
             </ul>
           ) : (
             <div className="reviews__empty">
-              <span aria-hidden="true">★</span>
-              <p>{data ? 'No reviews published yet.' : 'Loading reviews…'}</p>
-              {data?.accepting && <p className="muted">Tried a project? Yours could be the first.</p>}
+              <p>{data ? 'No reviews yet.' : 'Loading reviews…'}</p>
             </div>
           )}
         </div>

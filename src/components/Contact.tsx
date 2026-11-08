@@ -54,9 +54,8 @@ export default function Contact() {
 
   return (
     <section id="contact" className="tile contact" aria-labelledby="contact-title">
-      <p className="eyebrow">Contact</p>
       <h2 id="contact-title" className="contact__title">
-        Let’s talk
+        Contact
       </h2>
 
       <div className="contact__email">
